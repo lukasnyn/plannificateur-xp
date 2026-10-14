@@ -1,3 +1,5 @@
 # Sauvegardes exportées : ne jamais les publier
 *.json
 .DS_Store
+# Config locale de Claude (aperçu)
+.claude/

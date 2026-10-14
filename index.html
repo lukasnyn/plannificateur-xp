@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-title" content="Plannif XP" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="theme-color" content="#EEF1EF" />
+<!-- Calendrier semaine façon Google Calendar -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/fr.global.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -170,26 +173,50 @@ textarea.pl-input{resize:vertical;width:100%;font-family:inherit}
 .pl-cal-bar{pointer-events:auto;min-width:0;font-size:10.5px;font-weight:600;color:#fff;background:var(--c);border:0;padding:2px 7px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:.12s}
 .pl-cal-bar:hover{filter:brightness(1.08);z-index:2}
 
-/* Semaine — grille horaire */
-.pl-wk-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
-.pl-wk{display:grid;grid-template-columns:56px repeat(7,minmax(118px,1fr));min-width:820px}
-.pl-wk-corner{border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
-.pl-wk-dh{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:12.5px;text-align:center;padding:9px 0;border-bottom:1px solid var(--line);border-right:1px solid var(--line);color:var(--ink)}
-.pl-wk-dh:last-child{border-right:0}
-.pl-wk-dh.today{background:color-mix(in srgb,var(--petrol) 12%,var(--surface));color:var(--petrol)}
-.pl-wk-hours{position:relative;border-right:1px solid var(--line)}
-.pl-wk-hr{height:var(--hpx);font-size:10px;color:var(--muted);text-align:right;padding:1px 6px 0 0;border-top:1px solid var(--line)}
-.pl-wk-hr:first-child{border-top:0}
-.pl-wk-col{position:relative;border-right:1px solid var(--line);cursor:pointer;
-  background-image:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 1px,transparent 1px,transparent var(--hpx))}
-.pl-wk-col:last-child{border-right:0}
-.pl-wk-col.today{background-color:color-mix(in srgb,var(--petrol) 5%,var(--surface))}
-.pl-wk-ev{position:absolute;left:3px;right:3px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--surface));border-radius:0 7px 7px 0;padding:3px 7px;overflow:hidden;cursor:pointer;transition:.12s}
-.pl-wk-ev:hover{background:color-mix(in srgb,var(--c) 28%,var(--surface));z-index:3}
-.pl-wk-ev .t{font-size:10px;font-weight:700;color:var(--c)}
-.pl-wk-ev .n{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.2}
-.pl-wk-ev .lk{font-size:9.5px;font-weight:600;color:var(--c);opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Semaine — calendrier façon Google Calendar (FullCalendar) */
+.pl-fcbar h2{min-width:0;font-size:17px}
+.pl-fcbar .pl-seg{margin-left:auto}
+#fc-host{height:max(560px,calc(100dvh - 250px));background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fc{--fc-border-color:var(--line);--fc-page-bg-color:var(--surface);--fc-neutral-bg-color:var(--cell);
+  --fc-today-bg-color:transparent;--fc-now-indicator-color:#E5484D;
+  --fc-highlight-color:color-mix(in srgb,var(--petrol) 16%,transparent);--fc-event-selected-overlay-color:rgba(0,0,0,.08);
+  font-family:inherit;color:var(--ink);font-size:13px}
+.fc .fc-scrollgrid{border:0}
+.fc .fc-col-header-cell-cushion{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;color:var(--ink);text-decoration:none}
+.fc .dw{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.fc .dn{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:600;width:34px;height:34px;display:grid;place-items:center;border-radius:50%}
+.fc .fc-day-today .dn{background:var(--petrol);color:#fff}
+.fc .fc-day-today .dw{color:var(--petrol)}
+.fc .fc-timegrid-slot{height:24px}
+.fc .fc-timegrid-slot-minor{border-top-style:dotted}
+.fc .fc-timegrid-slot-label-cushion,.fc .fc-timegrid-axis-cushion{font-size:10.5px;color:var(--muted)}
+.fc .fc-timegrid-now-indicator-line{border-width:2px 0 0}
+.fc-v-event.pl-ev{background:color-mix(in srgb,var(--c,#0E6E6E) 18%,var(--surface));border:0;border-left:3px solid var(--c,#0E6E6E);border-radius:6px;box-shadow:0 0 0 1px var(--surface)}
+.fc-v-event.pl-ev:hover{background:color-mix(in srgb,var(--c,#0E6E6E) 28%,var(--surface))}
+.fc-v-event.pl-ev .fc-event-main{color:var(--ink);padding:2px 5px}
+.pl-fc-ev{overflow:hidden;height:100%}
+.pl-fc-ev .n{font-size:12px;font-weight:600;line-height:1.2;overflow:hidden}
+.pl-fc-ev .t{font-size:10px;font-weight:700;color:var(--c,#0E6E6E);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pl-fc-ev .lk{font-size:10px;font-weight:600;color:var(--c,#0E6E6E);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-h-event.pl-ev{background:var(--c,#0E6E6E);border:0;border-radius:5px}
+.fc-h-event.pl-ev .fc-event-main{color:#fff}
+.fc-h-event.pl-task{background:color-mix(in srgb,var(--c,#5B6B66) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--c,#5B6B66) 45%,var(--surface));border-radius:5px}
+.fc-h-event.pl-task .fc-event-main{color:var(--ink)}
+.pl-fc-all,.pl-fc-task{font-size:11px;font-weight:600;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-fc-task b{color:var(--c)}
+.fc-h-event.pl-task.is-done{opacity:.45}
+.fc-h-event.pl-task.is-done .pl-fc-task{text-decoration:line-through}
+.fc .fc-event-mirror{opacity:.85}
 .pl-wk-hint{font-size:11.5px;color:var(--muted);margin:10px 2px 0}
+/* Modale créneau : répétition */
+.pl-days{display:flex;gap:5px;flex-wrap:wrap}
+.pl-day{position:relative}
+.pl-day input{position:absolute;opacity:0;pointer-events:none}
+.pl-day span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--muted);background:var(--field);cursor:pointer;transition:.12s}
+.pl-day input:checked+span{background:var(--petrol);border-color:var(--petrol);color:#fff}
+.pl-repbox{display:flex;flex-direction:column;gap:12px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+.pl-note{font-size:12px;color:var(--muted);margin:0}
+.pl-choice{display:flex;flex-direction:column;gap:8px}
 
 .pl-backdrop{position:fixed;inset:0;background:rgba(10,14,15,.45);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
 .pl-modal{background:var(--surface);border:1px solid var(--line);border-radius:16px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.28);max-height:90vh;overflow:auto}
@@ -204,7 +231,7 @@ textarea.pl-input{resize:vertical;width:100%;font-family:inherit}
 .pl-field .pl-input{width:100%}
 .pl-field-row{display:flex;gap:12px}
 .pl-field-row .pl-field{flex:1}
-.pl-modal-f{display:flex;align-items:center;gap:8px;margin-top:4px}
+.pl-modal-f{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
 .pl-spacer{flex:1}
 
 .pl-cgrp h4{margin:8px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'Bricolage Grotesque',sans-serif}
@@ -240,7 +267,6 @@ const STATUT_COLOR = { "À faire":"#8A958F","En cours":"#2D7DD2","Bloqué":"#E54
 const JOURS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
-const DAY_START=7, DAY_END=23, HOUR_PX=46;     // grille semaine
 
 const SCORE_W = { urgence:1, difficulte:1.5, horizon:1 };  // la difficulté pèse davantage
 const scoreOf = t => {
@@ -547,45 +573,162 @@ function monthView(){
     </div>${grid}</section>`;
 }
 
-/* ---------- Semaine (grille horaire) ---------- */
+/* ---------- Semaine : calendrier façon Google Calendar (FullCalendar) ---------- */
+// Le calendrier vit dans un nœud persistant (fcHost) ré-attaché à chaque render() :
+// vue, date affichée et défilement sont conservés malgré la reconstruction de #app.
+let cal=null, fcHost=null, fcLastScroll=null, lastSelectAt=0;
+let fcView = window.innerWidth<700 ? "timeGrid3" : "timeGridWeek";
+const FC_VIEWS=[["timeGridDay","Jour"],["timeGrid3","3 jours"],["timeGridWeek","Semaine"]];
+const isTouch = () => window.matchMedia("(pointer:coarse)").matches;
+const hm = d => pad(d.getHours())+":"+pad(d.getMinutes());
+const later = f => setTimeout(f,0);   // laisse FullCalendar finir son geste avant de re-rendre
+
+function slotColor(s){
+  if(s.cat && state.cats[s.cat]) return catColor(s.cat);
+  const b=state.blocks.find(x=>x.id===s.blockId), tk=state.tasks.find(x=>x.id===s.taskId);
+  return b?catColor(b.type):tk?catColor(tk.categorie):"#0E6E6E";
+}
+function slotLink(s){
+  const b=state.blocks.find(x=>x.id===s.blockId), tk=state.tasks.find(x=>x.id===s.taskId);
+  return b?b.nom:tk?"◆ "+tk.nom:"";
+}
+function newSlotData(date,start,end){ return {id:uid(),nom:"",date,start,end,cat:"",blockId:"",taskId:"",recur:null}; }
+function openNewSlot(startD,endD){
+  modal={kind:"slot",isNew:true,data:newSlotData(iso(startD),hm(startD),iso(endD)===iso(startD)?hm(endD):"23:59")}; render();
+}
+
+// Source d'événements : créneaux (récurrents dépliés sur la période visible), événements Mois, échéances de tâches
+function fcEvents(info,success){
+  const evs=[], rs=info.start, re=info.end;
+  state.slots.forEach(s=>{
+    const props={kind:"slot",slotId:s.id,c:slotColor(s),link:slotLink(s)}, r=s.recur;
+    if(r && r.days && r.days.length){
+      const first=parseISO(s.date), until=r.until?parseISO(r.until):null, ex=r.except||[];
+      for(let d=new Date(rs.getFullYear(),rs.getMonth(),rs.getDate()); d<re; d=addDays(d,1)){
+        if(d<first || (until && d>until) || !r.days.includes(d.getDay())) continue;
+        const ds=iso(d); if(ex.includes(ds)) continue;
+        evs.push({id:s.id+"@"+ds,title:s.nom,start:ds+"T"+s.start,end:ds+"T"+s.end,classNames:["pl-ev"],extendedProps:{...props,occ:ds,recurring:true}});
+      }
+    } else evs.push({id:s.id,title:s.nom,start:s.date+"T"+s.start,end:s.date+"T"+s.end,classNames:["pl-ev"],extendedProps:props});
+  });
+  state.blocks.forEach(b=>evs.push({id:"b:"+b.id,title:b.nom,allDay:true,start:b.debut,end:iso(addDays(parseISO(b.fin||b.debut),1)),
+    classNames:["pl-ev"],extendedProps:{kind:"block",blockId:b.id,c:catColor(b.type)}}));
+  state.tasks.filter(t=>t.echeance).forEach(t=>{ const sc=scoreOf(t);
+    evs.push({id:"t:"+t.id,title:t.nom,allDay:true,start:t.echeance,durationEditable:false,
+      classNames:["pl-task"].concat(t.statut==="Terminé"?["is-done"]:[]),extendedProps:{kind:"task",taskId:t.id,c:scoreColor(sc),score:sc}}); });
+  success(evs);
+}
+function fcEventContent(arg){
+  const p=arg.event.extendedProps;
+  if(p.kind==="task") return {html:`<div class="pl-fc-task">◆ <b>${p.score}</b> ${esc(arg.event.title)}</div>`};
+  if(arg.event.allDay) return {html:`<div class="pl-fc-all">${esc(arg.event.title)}</div>`};
+  const e=arg.event, t=e.start&&e.end?hm(e.start)+"–"+hm(e.end):arg.timeText;
+  return {html:`<div class="pl-fc-ev"><div class="n">${esc(e.title)}</div><div class="t">${t}${p.recurring?" ↻":""}</div>${p.link?`<div class="lk">${esc(p.link)}</div>`:""}</div>`};
+}
+function fcClick(info){
+  info.jsEvent.preventDefault();
+  const p=info.event.extendedProps;
+  if(p.kind==="slot"){ const s=state.slots.find(x=>x.id===p.slotId);
+    if(s){ modal={kind:"slot",isNew:false,data:{...s,recur:s.recur?{...s.recur}:null,occ:p.occ||""}}; render(); } }
+  else if(p.kind==="block"){ const b=state.blocks.find(x=>x.id===p.blockId); if(b){ modal={kind:"event",isNew:false,data:{...b}}; render(); } }
+  else if(p.kind==="task"){ editTaskId=p.taskId; view="taches"; render(); window.scrollTo({top:0,behavior:"smooth"}); }
+}
+// Glisser / étirer : créneau ponctuel modifié directement, créneau récurrent → choix occurrence ou série
+function fcMove(info){
+  const ev=info.event, p=ev.extendedProps;
+  if(p.kind==="block"||p.kind==="task"){
+    if(!ev.allDay){ info.revert(); return; }   // un événement « journée » reste dans la ligne Journée
+    if(p.kind==="block"){ const b=state.blocks.find(x=>x.id===p.blockId); if(!b){ info.revert(); return; }
+      b.debut=iso(ev.start); b.fin=iso(addDays(ev.end||addDays(ev.start,1),-1)); }
+    else { const t=state.tasks.find(x=>x.id===p.taskId); if(!t){ info.revert(); return; } t.echeance=iso(ev.start); }
+    return later(commit);
+  }
+  if(ev.allDay){ info.revert(); return; }
+  const s=state.slots.find(x=>x.id===p.slotId); if(!s){ info.revert(); return; }
+  const endD=ev.end||new Date(ev.start.getTime()+3600000);
+  const mv={date:iso(ev.start),start:hm(ev.start),end:iso(endD)===iso(ev.start)?hm(endD):"23:59"};
+  if(!p.recurring){ Object.assign(s,mv); return later(commit); }
+  modal={kind:"recur-choice",slotId:s.id,occ:p.occ,mv}; later(render);
+}
+function applyRecurChoice(scope){
+  const {slotId,occ,mv}=modal, s=state.slots.find(x=>x.id===slotId); modal=null;
+  if(!s||!s.recur) return render();
+  if(scope==="one"){                       // exception + copie ponctuelle à la nouvelle place
+    s.recur.except=[...(s.recur.except||[]),occ];
+    state.slots.push({...s,id:uid(),recur:null,...mv});
+  } else {                                 // décale toute la série (jours et horaires)
+    const delta=Math.round((parseISO(mv.date)-parseISO(occ))/86400000);
+    s.recur.days=[...new Set(s.recur.days.map(d=>((d+delta)%7+7)%7))];
+    s.date=iso(addDays(parseISO(s.date),delta));
+    s.recur.except=(s.recur.except||[]).map(x=>iso(addDays(parseISO(x),delta)));
+    if(s.recur.until) s.recur.until=iso(addDays(parseISO(s.recur.until),delta));
+    s.start=mv.start; s.end=mv.end;
+  }
+  commit();
+}
+function fcScrollTime(){ const h=new Date().getHours(); return pad(h>=8&&h<=22?h-1:7)+":00:00"; }
+function fcOptions(){ return {
+  locale:"fr", firstDay:1, headerToolbar:false, height:"100%",
+  initialView:fcView, initialDate:new Date(),
+  views:{ timeGrid3:{type:"timeGrid",duration:{days:3}} },
+  allDayText:"Journée", nowIndicator:true, scrollTime:fcScrollTime(),
+  slotDuration:"00:30:00", slotLabelInterval:"01:00",
+  slotLabelFormat:{hour:"2-digit",minute:"2-digit",hour12:false},
+  eventTimeFormat:{hour:"2-digit",minute:"2-digit",hour12:false},
+  dayMaxEventRows:3,
+  editable:true, selectable:true, selectMirror:true,
+  longPressDelay:350, eventLongPressDelay:350, selectLongPressDelay:350,
+  events:fcEvents,
+  dayHeaderContent:a=>({html:`<span class="dw">${JOURS[(a.date.getDay()+6)%7]}</span><span class="dn">${a.date.getDate()}</span>`}),
+  eventContent:fcEventContent,
+  eventDidMount:a=>a.el.style.setProperty("--c",a.event.extendedProps.c||"#0E6E6E"),
+  eventClick:fcClick,
+  select:info=>{ lastSelectAt=Date.now(); cal.unselect();
+    if(info.allDay){ modal={kind:"event",isNew:true,data:{id:uid(),nom:"",type:defaultCat(),debut:iso(info.start),fin:iso(addDays(info.end,-1)),note:""}}; return later(render); }
+    const end=info.end-info.start<=30*60000?new Date(info.start.getTime()+3600000):info.end;   // simple clic → 1 h
+    later(()=>openNewSlot(info.start,end)); },
+  dateClick:info=>{ if(!isTouch()) return;   // sur iPhone : un simple toucher crée un créneau d'1 h
+    if(info.allDay){ modal={kind:"event",isNew:true,data:{id:uid(),nom:"",type:defaultCat(),debut:iso(info.date),fin:iso(info.date),note:""}}; return later(render); }
+    later(()=>openNewSlot(info.date,new Date(info.date.getTime()+3600000))); },
+  eventDrop:fcMove, eventResize:fcMove,
+  datesSet:a=>{ fcView=a.view.type; const h=document.getElementById("fc-title"); if(h) h.textContent=a.view.title;
+    document.querySelectorAll('[data-action="fc-view"]').forEach(b=>b.classList.toggle("on",b.dataset.v===fcView)); }
+};}
+// Balayage gauche/droite sur iPhone pour changer de période
+function fcSwipe(el){
+  let x0=0,y0=0,t0=0,ok=false;
+  el.addEventListener("touchstart",e=>{ ok=e.touches.length===1 && !e.target.closest(".fc-event"); if(!ok) return;
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); },{passive:true});
+  el.addEventListener("touchend",e=>{ if(!ok||!cal) return; ok=false;
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Date.now()-t0<600 && Date.now()-lastSelectAt>800 && Math.abs(dx)>70 && Math.abs(dy)<50) dx<0?cal.next():cal.prev(); },{passive:true});
+}
+function fcSaveScroll(){ if(fcHost&&fcHost.isConnected) fcLastScroll=[...fcHost.querySelectorAll(".fc-scroller")].map(s=>s.scrollTop); }
+function mountCalendar(){
+  const slot=document.getElementById("fc-slot"); if(!slot) return;
+  if(typeof FullCalendar==="undefined"){ slot.innerHTML=`<div class="pl-empty">Le calendrier a besoin d'une connexion internet pour se charger.</div>`; return; }
+  if(!fcHost){ fcHost=document.createElement("div"); fcHost.id="fc-host"; fcHost.appendChild(document.createElement("div")); fcSwipe(fcHost); }
+  slot.replaceWith(fcHost);
+  // FullCalendar impose height:100% sur son élément → il vit dans un enfant, fcHost porte la hauteur réelle
+  if(!cal){ cal=new FullCalendar.Calendar(fcHost.firstChild,fcOptions()); cal.render(); return; }
+  cal.updateSize(); cal.refetchEvents();
+  const sc=fcLastScroll; if(sc) requestAnimationFrame(()=>fcHost.querySelectorAll(".fc-scroller").forEach((s,i)=>{ if(sc[i]!=null) s.scrollTop=sc[i]; }));
+}
 function weekView(){
-  const days=Array.from({length:7},(_,i)=>addDays(weekCursor,i));
-  const label=weekCursor.getDate()+" "+MOIS[weekCursor.getMonth()].slice(0,4)+". – "+addDays(weekCursor,6).getDate()+" "+MOIS[addDays(weekCursor,6).getMonth()].slice(0,4)+".";
-  const rows=DAY_END-DAY_START, colH=rows*HOUR_PX;
-
-  const headers=days.map(d=>`<div class="pl-wk-dh${iso(d)===iso(new Date())?" today":""}">${fmtDayLabel(d)}</div>`).join("");
-  const hours=Array.from({length:rows},(_,i)=>`<div class="pl-wk-hr">${pad(DAY_START+i)}:00</div>`).join("");
-
-  const cols=days.map(d=>{
-    const today=iso(d)===iso(new Date());
-    const evs=state.slots.filter(s=>s.date===iso(d)).map(s=>{
-      const b=state.blocks.find(x=>x.id===s.blockId), tk=state.tasks.find(x=>x.id===s.taskId);
-      const accent=b?catColor(b.type):tk?catColor(tk.categorie):"var(--petrol)";
-      let top=(toMin(s.start)-DAY_START*60)/60*HOUR_PX;
-      let h=(toMin(s.end)-toMin(s.start))/60*HOUR_PX;
-      top=Math.max(0,top); h=Math.max(20,h-2);
-      const tall=h>=52;
-      const link=b?esc(b.nom):tk?("◆ "+esc(tk.nom)):"";
-      return `<div class="pl-wk-ev" style="--c:${accent};top:${top}px;height:${h}px" data-action="edit-slot" data-id="${s.id}">
-        <div class="t">${esc(s.start)}–${esc(s.end)}</div><div class="n">${esc(s.nom)}</div>
-        ${tall&&link?`<div class="lk">${link}</div>`:""}</div>`;
-    }).join("");
-    return `<div class="pl-wk-col${today?" today":""}" style="height:${colH}px" data-action="new-slot-at" data-date="${iso(d)}">${evs}</div>`;
-  }).join("");
-
+  const seg=FC_VIEWS.map(([v,l])=>`<button class="${fcView===v?"on":""}" data-action="fc-view" data-v="${v}">${l}</button>`).join("");
   return `<section>
-    <div class="pl-monthbar">
-      <button class="pl-nav-btn" data-action="week-prev">‹</button>
-      <h2>Semaine du ${label}</h2>
-      <button class="pl-nav-btn" data-action="week-next">›</button>
-      <button class="pl-btn ghost sm" data-action="week-today">Cette semaine</button>
-      <button class="pl-btn sm" data-action="new-slot" data-date="${iso(weekCursor)}">+ Nouveau créneau</button>
+    <div class="pl-monthbar pl-fcbar">
+      <button class="pl-nav-btn" data-action="fc-prev" aria-label="Période précédente">‹</button>
+      <button class="pl-nav-btn" data-action="fc-next" aria-label="Période suivante">›</button>
+      <h2 id="fc-title">${cal?esc(cal.view.title):""}</h2>
+      <button class="pl-btn ghost sm" data-action="fc-today">Aujourd'hui</button>
+      <div class="pl-seg">${seg}</div>
+      <button class="pl-btn sm" data-action="new-slot">+ Créneau</button>
     </div>
-    <div class="pl-wk-wrap"><div class="pl-wk" style="--hpx:${HOUR_PX}px">
-      <div class="pl-wk-corner"></div>${headers}
-      <div class="pl-wk-hours">${hours}</div>${cols}
-    </div></div>
-    <p class="pl-wk-hint">Astuce : clique directement sur une heure dans une colonne pour créer un créneau à ce moment-là.</p>
+    <div id="fc-slot"></div>
+    <p class="pl-wk-hint">${isTouch()
+      ?"Touche une heure pour créer un créneau · appui long pour déplacer ou étirer · balaye pour changer de période."
+      :"Glisse sur la grille pour créer un créneau · déplace ou étire un créneau pour le modifier · la ligne « Journée » montre tes événements et échéances."}</p>
   </section>`;
 }
 
@@ -607,20 +750,41 @@ function modalHTML(){
       <div class="pl-modal-f">${modal.isNew?"":`<button class="pl-btn danger" data-action="delete-event" data-id="${b.id}">Supprimer</button>`}
         <div class="pl-spacer"></div><button class="pl-btn ghost" data-action="modal-close">Annuler</button>
         <button class="pl-btn" data-action="save-event">Enregistrer</button></div>`;
+  } else if(modal.kind==="recur-choice"){
+    title="Créneau récurrent";
+    body=`<p class="pl-note">Ce créneau se répète chaque semaine. Que veux-tu déplacer ?</p>
+      <div class="pl-choice">
+        <button class="pl-btn ghost" data-action="recur-one">Seulement cette occurrence</button>
+        <button class="pl-btn" data-action="recur-all">Toute la série</button>
+      </div>
+      <div class="pl-modal-f"><div class="pl-spacer"></div><button class="pl-btn ghost" data-action="modal-close">Annuler</button></div>`;
   } else if(modal.kind==="slot"){
-    const s=modal.data;
+    const s=modal.data, weekly=!!(s.recur&&s.recur.days&&s.recur.days.length), r=s.recur||{};
+    const dow=parseISO(s.date).getDay();
+    const dayBoxes=[[1,"L"],[2,"M"],[3,"M"],[4,"J"],[5,"V"],[6,"S"],[0,"D"]].map(([v,l])=>
+      `<label class="pl-day"><input type="checkbox" data-rday="${v}" ${(weekly?r.days.includes(v):v===dow)?"checked":""}/><span>${l}</span></label>`).join("");
+    const delBtns=modal.isNew?"":(weekly&&s.occ
+      ?`<button class="pl-btn danger sm" data-action="delete-occ">Suppr. cette fois</button><button class="pl-btn danger sm" data-action="delete-slot" data-id="${s.id}">Suppr. la série</button>`
+      :`<button class="pl-btn danger" data-action="delete-slot" data-id="${s.id}">Supprimer</button>`);
     title=modal.isNew?"Nouveau créneau":"Modifier le créneau";
-    const dayOpts=modal.days.map(d=>`<option value="${iso(d)}"${iso(d)===s.date?" selected":""}>${fmtDayLabel(d)}</option>`).join("");
     body=`
-      <label class="pl-field"><span>Intitulé</span><input id="m-nom" class="pl-input" placeholder="Montage, révisions, sport…" value="${esc(s.nom)}"/></label>
-      <label class="pl-field"><span>Jour</span><select id="m-date" class="pl-input">${dayOpts}</select></label>
+      <label class="pl-field"><span>Intitulé</span><input id="m-nom" class="pl-input" placeholder="Cours, révisions, sport…" value="${esc(s.nom)}"/></label>
+      <label class="pl-field"><span>${weekly?"Début de la série":"Date"}</span><input id="m-date" class="pl-input" type="date" value="${esc(s.date)}"/></label>
       <div class="pl-field-row">
         <label class="pl-field"><span>Début</span><input id="m-start" class="pl-input" type="time" value="${esc(s.start)}"/></label>
         <label class="pl-field"><span>Fin</span><input id="m-end" class="pl-input" type="time" value="${esc(s.end)}"/></label>
       </div>
       <label class="pl-field"><span>Bloc lié <em>(facultatif)</em></span><select id="m-block" class="pl-input"><option value="">— Aucun —</option>${state.blocks.map(b=>`<option value="${b.id}"${b.id===s.blockId?" selected":""}>${esc(b.nom)}</option>`).join("")}</select></label>
+      <label class="pl-field"><span>Répétition</span><select id="m-rep" class="pl-input">
+        <option value="none"${weekly?"":" selected"}>Ne se répète pas</option><option value="weekly"${weekly?" selected":""}>Chaque semaine</option></select></label>
+      <div id="m-rep-box" class="pl-repbox"${weekly?"":` style="display:none"`}>
+        <div class="pl-field"><span>Jours</span><div class="pl-days">${dayBoxes}</div></div>
+        <label class="pl-field"><span>Jusqu'au <em>(facultatif — fin du semestre…)</em></span><input id="m-until" class="pl-input" type="date" value="${esc(r.until||"")}"/></label>
+      </div>
+      <label class="pl-field"><span>Couleur</span><select id="m-cat" class="pl-input"><option value="">Automatique</option>${catKeys().map(k=>`<option${k===s.cat?" selected":""}>${esc(k)}</option>`).join("")}</select></label>
       <label class="pl-field"><span>Tâche liée <em>(facultatif)</em></span><select id="m-task" class="pl-input"><option value="">— Aucune —</option>${state.tasks.map(t=>`<option value="${t.id}"${t.id===s.taskId?" selected":""}>${esc(t.nom)}</option>`).join("")}</select></label>
-      <div class="pl-modal-f">${modal.isNew?"":`<button class="pl-btn danger" data-action="delete-slot" data-id="${s.id}">Supprimer</button>`}
+      ${weekly&&!modal.isNew?`<p class="pl-note">Les modifications s'appliquent à toute la série.</p>`:""}
+      <div class="pl-modal-f">${delBtns}
         <div class="pl-spacer"></div><button class="pl-btn ghost" data-action="modal-close">Annuler</button>
         <button class="pl-btn" data-action="save-slot">Enregistrer</button></div>`;
   } else if(modal.kind==="colors"){
@@ -649,8 +813,10 @@ function modalHTML(){
 
 /* ---------- Rendu ---------- */
 function render(){
+  fcSaveScroll();
   const main=view==="taches"?tasksView():view==="mois"?monthView():weekView();
   document.getElementById("app").innerHTML=header()+storageWarn()+seedBar()+`<main>${main}</main>`+modalHTML();
+  if(view==="semaine") mountCalendar();
   if(modal){
     const bd=document.getElementById("pl-backdrop");
     if(bd) bd.addEventListener("click",e=>{ if(e.target===bd) closeModal(); });
@@ -661,7 +827,6 @@ function render(){
   }
 }
 function closeModal(){ modal=null; render(); }
-function weekDays(){ return Array.from({length:7},(_,i)=>addDays(weekCursor,i)); }
 
 function readTaskForm(){ return {
   nom:document.getElementById("t-nom").value.trim(),
@@ -723,24 +888,32 @@ document.addEventListener("click", e=>{
       state.blocks=state.blocks.some(x=>x.id===b.id)?state.blocks.map(x=>x.id===b.id?b:x):[...state.blocks,b]; modal=null; commit(); break; }
     case "delete-event": state.blocks=state.blocks.filter(x=>x.id!==id); modal=null; commit(); break;
 
-    case "week-prev": weekCursor=addDays(weekCursor,-7); render(); break;
-    case "week-next": weekCursor=addDays(weekCursor,7); render(); break;
-    case "week-today": weekCursor=mondayOf(new Date()); render(); break;
-    case "new-slot": modal={kind:"slot",isNew:true,days:weekDays(),data:{id:uid(),nom:"",date:date,start:"09:00",end:"10:00",blockId:"",taskId:""}}; render(); break;
-    case "new-slot-at": {
-      const rect=el.getBoundingClientRect();
-      let mins=DAY_START*60+((e.clientY-rect.top)/HOUR_PX)*60;
-      mins=Math.max(DAY_START*60, Math.min(DAY_END*60-30, Math.round(mins/30)*30));
-      const start=fmtMin(mins), end=fmtMin(Math.min(DAY_END*60, mins+60));
-      modal={kind:"slot",isNew:true,days:weekDays(),data:{id:uid(),nom:"",date:date,start,end,blockId:"",taskId:""}}; render(); break;
+    case "fc-prev": if(cal) cal.prev(); break;
+    case "fc-next": if(cal) cal.next(); break;
+    case "fc-today": if(cal) cal.today(); break;
+    case "fc-view": if(cal) cal.changeView(el.dataset.v); break;
+    case "new-slot": {   // aujourd'hui (heure pleine suivante) si visible, sinon début de la période affichée à 9 h
+      const now=new Date(), v=cal&&cal.view, inView=!v||(now>=v.activeStart&&now<v.activeEnd);
+      const h=inView?Math.min(now.getHours()+1,22):9, d=inView?now:new Date(v.activeStart);
+      modal={kind:"slot",isNew:true,data:newSlotData(iso(d),pad(h)+":00",pad(h+1)+":00")}; render(); break;
     }
-    case "edit-slot": { const s=state.slots.find(x=>x.id===id); if(s){ modal={kind:"slot",isNew:false,days:weekDays(),data:{...s}}; render(); } break; }
-    case "save-slot": { const s={ id:modal.data.id, nom:document.getElementById("m-nom").value.trim(),
-        date:document.getElementById("m-date").value, start:document.getElementById("m-start").value,
-        end:document.getElementById("m-end").value, blockId:document.getElementById("m-block").value, taskId:document.getElementById("m-task").value };
-      if(!s.nom||!s.date) return;
+    case "save-slot": {
+      const g=k=>document.getElementById(k);
+      const s={ id:modal.data.id, nom:g("m-nom").value.trim(), date:g("m-date").value, start:g("m-start").value, end:g("m-end").value,
+        cat:g("m-cat").value, blockId:g("m-block").value, taskId:g("m-task").value, recur:null };
+      if(!s.nom||!s.date||!s.start) return;
+      if(!s.end||s.end<=s.start) s.end=fmtMin(Math.min(toMin(s.start)+60,23*60+59));   // fin invalide → +1 h
+      if(g("m-rep").value==="weekly"){
+        let days=[...document.querySelectorAll("[data-rday]")].filter(x=>x.checked).map(x=>+x.dataset.rday);
+        if(!days.length) days=[parseISO(s.date).getDay()];
+        s.recur={days, until:g("m-until").value||"", except:(modal.data.recur&&modal.data.recur.except)||[]};
+      }
       state.slots=state.slots.some(x=>x.id===s.id)?state.slots.map(x=>x.id===s.id?s:x):[...state.slots,s]; modal=null; commit(); break; }
     case "delete-slot": state.slots=state.slots.filter(x=>x.id!==id); modal=null; commit(); break;
+    case "delete-occ": { const s=state.slots.find(x=>x.id===modal.data.id);
+      if(s&&s.recur) s.recur.except=[...(s.recur.except||[]),modal.data.occ]; modal=null; commit(); break; }
+    case "recur-one": applyRecurChoice("one"); break;
+    case "recur-all": applyRecurChoice("all"); break;
     case "modal-close": closeModal(); break;
   }
 });
@@ -752,6 +925,12 @@ document.addEventListener("change", e=>{
     render(); return;
   }
   if(e.target.id==="f-done"){ hideDone=e.target.checked; render(); return; }
+  if(e.target.id==="m-rep"){ const box=document.getElementById("m-rep-box"); if(box) box.style.display=e.target.value==="weekly"?"":"none"; return; }
+  if(e.target.id==="m-date"&&e.target.value){   // tant que ce n'est pas récurrent, le jour coché suit la date
+    const rep=document.getElementById("m-rep");
+    if(rep&&rep.value!=="weekly"){ const dw=parseISO(e.target.value).getDay(); document.querySelectorAll("[data-rday]").forEach(x=>x.checked=+x.dataset.rday===dw); }
+    return;
+  }
   if(e.target.dataset && e.target.dataset.catOld!=null){ renameCat(e.target.dataset.catOld, e.target.value); commit(); return; }
   if(e.target.dataset && e.target.dataset.ck){
     const kind=e.target.dataset.ck, name=e.target.dataset.cname;
