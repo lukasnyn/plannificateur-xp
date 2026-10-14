@@ -1,0 +1,3 @@
+# Sauvegardes exportées : ne jamais les publier
+*.json
+.DS_Store

@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Plannificateur XP</title>
+<!-- Web app iPhone : plein écran depuis l'écran d'accueil -->
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Plannif XP" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#EEF1EF" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#EEF1EF; --surface:#FFFFFF; --field:#FFFFFF; --cell:#FAFBFA;
+  --ink:#1A2421; --muted:#5B6B66; --line:#E1E5E2; --tint:#FFFFFF; --petrol:#0E6E6E;
+}
+html.dark{
+  --bg:#14181A; --surface:#1C2123; --field:#161B1D; --cell:#191E20;
+  --ink:#E8EDEB; --muted:#9AA8A3; --line:#2C3336; --tint:#262D2F;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(120% 120% at 100% 0%, var(--glow,#F6EFE6) 0%, rgba(246,239,230,0) 45%), var(--bg);
+  min-height:100vh;transition:background .25s,color .25s}
+html.dark body{--glow:#20282A}
+#app{padding:18px;max-width:1200px;margin:0 auto;
+  padding-top:max(18px,env(safe-area-inset-top));padding-bottom:max(18px,env(safe-area-inset-bottom));
+  padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+/* iPhone : iOS zoome sur tout champ < 16px au focus — on passe à 16px sur écran tactile */
+@media (pointer:coarse){ .pl-input,.pl-mini,input,select,textarea{font-size:16px} }
+
+.pl-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.pl-brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.pl-mark{width:30px;height:30px;border-radius:9px;
+  background:conic-gradient(from 200deg,#0E6E6E,#2D7DD2,#7C5CFF,#E85D9E,#F2A03D,#0E6E6E);
+  box-shadow:inset 0 0 0 4px var(--surface)}
+.pl-brand h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;margin:0;letter-spacing:-.02em}
+.pl-brand p{margin:1px 0 0;font-size:11.5px;color:var(--muted)}
+.pl-nav{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.pl-tab{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:14px;border:0;background:transparent;
+  padding:8px 16px;border-radius:9px;cursor:pointer;color:var(--muted);transition:.15s}
+.pl-tab:hover{color:var(--ink)}
+.pl-tab.is-active{background:var(--ink);color:var(--surface)}
+.pl-saved{font-size:11px;color:var(--petrol);opacity:0;transition:.3s;font-weight:600}
+.pl-saved.show{opacity:1}
+.pl-icobtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  cursor:pointer;font-size:15px;color:var(--ink);transition:.15s}
+.pl-icobtn:hover{border-color:var(--ink)}
+
+.pl-seed{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);
+  background:var(--surface);border:1px dashed var(--line);padding:10px 14px;border-radius:12px;margin-bottom:14px}
+.pl-seed-hint{font-size:11px;opacity:.7}
+.pl-warn{display:flex;gap:8px;align-items:baseline;background:color-mix(in srgb,#E5A50A 13%,var(--surface));
+  border:1px solid color-mix(in srgb,#E5A50A 42%,var(--surface));color:var(--ink);font-size:12.5px;
+  line-height:1.5;padding:10px 14px;border-radius:12px;margin-bottom:14px}
+.pl-warn b{font-weight:600}
+
+.pl-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--line);padding:10px;border-radius:14px;margin-bottom:14px}
+.pl-input{font-family:inherit;font-size:13.5px;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;transition:.15s}
+.pl-input:focus{border-color:var(--petrol);box-shadow:0 0 0 3px rgba(14,110,110,.16)}
+.pl-input.grow{flex:1;min-width:180px}
+.pl-input.sel{cursor:pointer;background:var(--cell)}
+.pl-input.date{padding:8px 9px}
+textarea.pl-input{resize:vertical;width:100%;font-family:inherit}
+.pl-btn{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;
+  border:0;background:var(--petrol);color:#fff;padding:10px 16px;border-radius:9px;transition:.15s;white-space:nowrap}
+.pl-btn:hover{background:#0b5c5c}
+.pl-btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.pl-btn.ghost:hover{color:var(--ink);border-color:var(--ink)}
+.pl-btn.sm{padding:7px 12px;font-size:12.5px}
+.pl-btn.danger{background:transparent;color:#E5484D;border:1px solid color-mix(in srgb,#E5484D 35%,var(--surface))}
+.pl-btn.danger:hover{background:#E5484D;color:#fff}
+
+.pl-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pl-seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.pl-seg button{border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);
+  padding:7px 14px;border-radius:7px;cursor:pointer}
+.pl-seg button.on{background:var(--ink);color:var(--surface)}
+.pl-filters{display:flex;align-items:center;gap:12px}
+.pl-mini{font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--field);color:var(--ink);cursor:pointer;transition:.12s}
+.pl-mini:hover{border-color:var(--ink)}
+.pl-mini.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.pl-check{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.pl-filterpanel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:20px}
+.pl-fgroup{min-width:0}
+.pl-fgroup h5{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-family:'Bricolage Grotesque',sans-serif;font-weight:600}
+.pl-ftags{display:flex;flex-wrap:wrap;gap:6px}
+.pl-ftag{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--field);
+  border:1px solid var(--line);border-radius:20px;padding:5px 11px;cursor:pointer;transition:.12s;user-select:none}
+.pl-ftag .dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.pl-ftag input{position:absolute;opacity:0;pointer-events:none}
+.pl-ftag:hover{border-color:var(--c)}
+.pl-ftag.on{color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--tint));border-color:color-mix(in srgb,var(--c) 40%,var(--tint))}
+
+.pl-list{display:flex;flex-direction:column;gap:9px}
+.pl-card{display:flex;gap:14px;align-items:stretch;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:13px 15px;transition:.15s}
+.pl-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+/* État terminé — dimming + grayscale + clics coupés (actions gardées pour annuler) */
+.pl-card.is-completed{pointer-events:none;cursor:not-allowed}
+.pl-card.is-completed:hover{box-shadow:none}
+.pl-card.is-completed .pl-score,
+.pl-card.is-completed .pl-card-body{opacity:.45;filter:grayscale(100%);transition:opacity .2s,filter .2s}
+.pl-card.is-completed h3{text-decoration:line-through}
+.pl-card.is-completed .pl-card-actions{pointer-events:auto}
+.pl-statut .chk{vertical-align:-2px;margin-right:4px}
+.pl-score{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:44px}
+.pl-score .gd-badge{width:34px;height:34px;display:block}
+.pl-card.compact .pl-score .gd-badge{width:27px;height:27px}
+.pl-score b{font-family:'Bricolage Grotesque',sans-serif;font-size:24px;line-height:1;color:var(--sc)}
+.pl-score .gauge{width:34px;height:4px;border-radius:3px;background:var(--line);overflow:hidden}
+.pl-score .gauge i{display:block;height:100%;background:var(--sc)}
+.pl-card-body{flex:1;min-width:0}
+.pl-card-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.pl-card-top h3{font-size:15px;font-weight:600;margin:0;font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.01em}
+.pl-cat{font-size:11px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--tint));
+  padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pl-chips{display:flex;gap:6px;flex-wrap:wrap}
+.pl-chip{font-size:11px;font-weight:600;color:#fff;background:var(--c);padding:3px 9px;border-radius:6px}
+.pl-chip.outline{background:color-mix(in srgb,var(--c) 14%,var(--tint));color:var(--c);border:1px solid color-mix(in srgb,var(--c) 32%,var(--tint))}
+.pl-card-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:8px}
+.pl-statut{font-size:11.5px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--tint));
+  border:1px solid color-mix(in srgb,var(--c) 30%,var(--tint));padding:5px 11px;border-radius:20px;cursor:pointer;white-space:nowrap}
+.pl-icons{display:flex;gap:4px}
+.pl-icons button{width:26px;height:26px;border:1px solid var(--line);background:var(--field);border-radius:7px;cursor:pointer;color:var(--muted);font-size:12px;transition:.15s}
+.pl-icons button:hover{color:var(--ink);border-color:var(--ink)}
+.pl-card.compact{padding:10px 12px}
+.pl-card.compact .pl-score{min-width:34px}
+.pl-card.compact .pl-score b{font-size:19px}
+
+.pl-kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pl-col{background:var(--cell);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0}
+.pl-col-head{display:flex;align-items:center;gap:7px;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:13px;margin-bottom:10px;padding:2px 4px}
+.pl-col-head .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.pl-col-head .count{margin-left:auto;color:var(--muted);font-size:12px}
+.pl-col-body{display:flex;flex-direction:column;gap:8px}
+.pl-col-empty{color:var(--line);text-align:center;font-size:13px;margin:6px 0}
+
+.pl-empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:34px;text-align:center;color:var(--muted);font-size:14px}
+
+.pl-monthbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.pl-monthbar h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;margin:0;letter-spacing:-.02em;min-width:190px}
+.pl-nav-btn{width:34px;height:34px;border:1px solid var(--line);background:var(--field);border-radius:9px;cursor:pointer;font-size:18px;color:var(--ink);transition:.15s}
+.pl-nav-btn:hover{background:var(--ink);color:var(--surface)}
+.pl-legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto;font-size:11.5px;color:var(--muted)}
+.pl-legend span{display:flex;align-items:center;gap:5px}
+.pl-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+.pl-cal{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px}
+.pl-cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.pl-cal-h{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0;text-transform:uppercase;letter-spacing:.04em}
+.pl-cal-week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:5px}
+.pl-cal-cell{position:relative;border-radius:10px;padding:6px;background:var(--cell);border:1px solid transparent;cursor:pointer;transition:.12s}
+.pl-cal-cell:hover{border-color:color-mix(in srgb,var(--petrol) 40%,var(--surface))}
+.pl-cal-cell.out{opacity:.4}
+.pl-cal-cell.today{border-color:var(--petrol);background:color-mix(in srgb,var(--petrol) 8%,var(--surface))}
+.pl-cal-n{font-size:12px;font-weight:600;color:var(--muted)}
+.pl-cal-add{position:absolute;top:5px;right:7px;font-size:14px;color:var(--muted);opacity:0;transition:.12s}
+.pl-cal-cell:hover .pl-cal-add{opacity:.8}
+.pl-cal-bars{position:absolute;left:0;right:0;top:28px;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:19px;column-gap:5px;row-gap:2px;pointer-events:none}
+.pl-cal-bar{pointer-events:auto;min-width:0;font-size:10.5px;font-weight:600;color:#fff;background:var(--c);border:0;padding:2px 7px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:.12s}
+.pl-cal-bar:hover{filter:brightness(1.08);z-index:2}
+
+/* Semaine — grille horaire */
+.pl-wk-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.pl-wk{display:grid;grid-template-columns:56px repeat(7,minmax(118px,1fr));min-width:820px}
+.pl-wk-corner{border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.pl-wk-dh{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:12.5px;text-align:center;padding:9px 0;border-bottom:1px solid var(--line);border-right:1px solid var(--line);color:var(--ink)}
+.pl-wk-dh:last-child{border-right:0}
+.pl-wk-dh.today{background:color-mix(in srgb,var(--petrol) 12%,var(--surface));color:var(--petrol)}
+.pl-wk-hours{position:relative;border-right:1px solid var(--line)}
+.pl-wk-hr{height:var(--hpx);font-size:10px;color:var(--muted);text-align:right;padding:1px 6px 0 0;border-top:1px solid var(--line)}
+.pl-wk-hr:first-child{border-top:0}
+.pl-wk-col{position:relative;border-right:1px solid var(--line);cursor:pointer;
+  background-image:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 1px,transparent 1px,transparent var(--hpx))}
+.pl-wk-col:last-child{border-right:0}
+.pl-wk-col.today{background-color:color-mix(in srgb,var(--petrol) 5%,var(--surface))}
+.pl-wk-ev{position:absolute;left:3px;right:3px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--surface));border-radius:0 7px 7px 0;padding:3px 7px;overflow:hidden;cursor:pointer;transition:.12s}
+.pl-wk-ev:hover{background:color-mix(in srgb,var(--c) 28%,var(--surface));z-index:3}
+.pl-wk-ev .t{font-size:10px;font-weight:700;color:var(--c)}
+.pl-wk-ev .n{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.2}
+.pl-wk-ev .lk{font-size:9.5px;font-weight:600;color:var(--c);opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-wk-hint{font-size:11.5px;color:var(--muted);margin:10px 2px 0}
+
+.pl-backdrop{position:fixed;inset:0;background:rgba(10,14,15,.45);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+.pl-modal{background:var(--surface);border:1px solid var(--line);border-radius:16px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.28);max-height:90vh;overflow:auto}
+.pl-modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface)}
+.pl-modal-h h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;margin:0}
+.pl-modal-x{width:28px;height:28px;border:0;background:var(--cell);border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px}
+.pl-modal-x:hover{color:var(--ink)}
+.pl-modal-b{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.pl-field{display:flex;flex-direction:column;gap:5px}
+.pl-field>span{font-size:12px;font-weight:600;color:var(--muted)}
+.pl-field>span em{font-weight:400;font-style:normal;opacity:.7}
+.pl-field .pl-input{width:100%}
+.pl-field-row{display:flex;gap:12px}
+.pl-field-row .pl-field{flex:1}
+.pl-modal-f{display:flex;align-items:center;gap:8px;margin-top:4px}
+.pl-spacer{flex:1}
+
+.pl-cgrp h4{margin:8px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'Bricolage Grotesque',sans-serif}
+.pl-crow{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:5px 0}
+.pl-crow .lbl{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.pl-crow .sw{width:12px;height:12px;border-radius:4px;background:var(--c)}
+.pl-crow input[type=color]{width:46px;height:30px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer;padding:2px;flex:none}
+.pl-crow .cat-name{flex:1;min-width:0;padding:6px 9px;font-size:13.5px}
+.pl-catdel{width:30px;height:30px;border:1px solid var(--line);background:var(--field);border-radius:8px;cursor:pointer;color:var(--muted);font-size:12px;flex:none;transition:.12s}
+.pl-catdel:hover{color:#E5484D;border-color:#E5484D}
+.pl-addcat{border-top:1px dashed var(--line);margin-top:6px;padding-top:11px}
+
+@media (max-width:880px){.pl-kanban{grid-template-columns:repeat(2,1fr)}.pl-brand p{display:none}}
+@media (max-width:560px){.pl-kanban{grid-template-columns:1fr}.pl-input.grow{min-width:140px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ---------- Référence ---------- */
+const CATEGORIES = { Perso:"#7C5CFF", "Études":"#2D7DD2", "Responsabilité":"#0E6E6E", Loisirs:"#F2A03D", "Santé":"#E45D9E" };
+const CAT_KEYS = Object.keys(CATEGORIES);
+const DEFAULT_CAT = CAT_KEYS[0];
+const URGENCE = { Critique:{v:4,c:"#B3261E"}, Urgent:{v:3,c:"#E5484D"}, "Modéré":{v:2,c:"#F0A93B"}, Mineur:{v:1,c:"#3F9E68"} };
+const DIFFICULTE = { Difficile:{v:3,c:"#7C5CFF"}, Moyen:{v:2,c:"#2D7DD2"}, Facile:{v:1,c:"#8A958F"} };
+const DIFF_SPIKES = { Facile:1, Moyen:3, Difficile:5 };
+const HORIZON = { "Court terme":{v:2,c:"var(--ink)"}, "Long terme":{v:1,c:"#8A958F"} };
+const STATUTS = ["À faire","En cours","Bloqué","Terminé"];
+const STATUT_COLOR = { "À faire":"#8A958F","En cours":"#2D7DD2","Bloqué":"#E5484D","Terminé":"#3F9E68" };
+const JOURS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+const DAY_START=7, DAY_END=23, HOUR_PX=46;     // grille semaine
+
+const SCORE_W = { urgence:1, difficulte:1.5, horizon:1 };  // la difficulté pèse davantage
+const scoreOf = t => {
+  const urgN  = (URGENCE[t.urgence].v      - 1) / 3;   // 0..1 (Mineur→Critique)
+  const diffN = (DIFFICULTE[t.difficulte].v - 1) / 2;  // 0..1 (Facile→Difficile)
+  const horN  = 2 - HORIZON[t.horizon].v;              // 0..1 inversé : Long terme→1, Court terme→0
+  const w = SCORE_W, sum = w.urgence + w.difficulte + w.horizon;
+  const moyenne = (w.urgence*urgN + w.difficulte*diffN + w.horizon*horN) / sum;
+  return Math.max(1, Math.round(moyenne * 10));        // note finale 1..10
+};
+const scoreColor = s => s>=8 ? "#E5484D" : s>=5 ? "#F0A93B" : "#3F9E68";
+
+/* ---------- Helpers ---------- */
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseISO = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+function mondayOf(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
+const addDays = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const fmtDayLabel = d => JOURS[(d.getDay()+6)%7]+" "+d.getDate();
+const shortDate = s => parseISO(s).getDate()+" "+MOIS[parseISO(s).getMonth()].slice(0,4)+".";
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const toMin = t => { const [h,m]=t.split(":").map(Number); return h*60+(m||0); };
+const fmtMin = m => pad(Math.floor(m/60))+":"+pad(m%60);
+
+/* ---------- État ---------- */
+const KEY = "organisation-ete-v1";
+let state = { tasks:[], blocks:[], slots:[], theme:"light", colors:{cat:{},urg:{}} };
+try { const raw=localStorage.getItem(KEY); if(raw){ const d=JSON.parse(raw); state={...state,...d}; } } catch(e){}
+if(!state.colors) state.colors={cat:{},urg:{}};
+if(!state.colors.cat) state.colors.cat={};
+if(!state.colors.urg) state.colors.urg={};
+if(!state.cats){                              // catégories personnalisables (nom → couleur, ordonnées)
+  state.cats={...CATEGORIES};
+  for(const k in state.colors.cat){ if(state.cats[k]!=null) state.cats[k]=state.colors.cat[k]; }  // migre d'anciennes couleurs
+}
+
+const catColor = k => (state.cats && state.cats[k]) || CATEGORIES[k] || "#8A958F";
+const catKeys = () => Object.keys(state.cats);
+function defaultCat(){ return catKeys()[0] || "Perso"; }
+function renameCat(oldN,newN){
+  newN=(newN||"").trim();
+  if(!newN || newN===oldN) return;
+  if(state.cats[newN]!=null){ alert("Cette catégorie existe déjà."); return; }
+  const rebuilt={}; for(const k in state.cats){ rebuilt[k===oldN?newN:k]=state.cats[k]; }  // préserve l'ordre
+  state.cats=rebuilt;
+  state.tasks.forEach(t=>{ if(t.categorie===oldN) t.categorie=newN; });   // réaffecte les tâches
+  state.blocks.forEach(b=>{ if(b.type===oldN) b.type=newN; });            // et les événements
+  if(filters.categorie) filters.categorie=filters.categorie.map(x=>x===oldN?newN:x);
+}
+const urgColor = k => (state.colors.urg[k]) || URGENCE[k].c;
+
+const FILTER_FACETS = [
+  { key:"categorie",  label:"Catégorie",  values:()=>catKeys(),          color:catColor },
+  { key:"urgence",    label:"Urgence",    values:Object.keys(URGENCE),   color:urgColor },
+  { key:"difficulte", label:"Difficulté", values:Object.keys(DIFFICULTE),color:k=>DIFFICULTE[k].c },
+  { key:"statut",     label:"Statut",     values:STATUTS,                color:k=>STATUT_COLOR[k] }
+];
+
+let view="taches", taskMode="priorite", hideDone=false, editTaskId=null;
+let filters={categorie:[],urgence:[],difficulte:[],statut:[]}, filtersOpen=false;
+let monthCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1), weekCursor=mondayOf(new Date());
+let modal=null, savedTimer=null;
+
+function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function storageWorks(){ try{ const k="__plx_test"; localStorage.setItem(k,"1"); localStorage.removeItem(k); return true; }catch(e){ return false; } }
+function exportBackup(){
+  const payload={ app:"plannificateur-xp", version:1, exportedAt:new Date().toISOString(),
+    tasks:state.tasks, blocks:state.blocks, slots:state.slots, cats:state.cats, colors:state.colors, theme:state.theme };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download="plannificateur-xp-"+iso(new Date())+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000); flashSaved();
+}
+function importBackup(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="application/json,.json";
+  inp.addEventListener("change",()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      let d; try{ d=JSON.parse(rd.result); }catch(err){ alert("Fichier illisible : "+err.message); return; }
+      if(!d||typeof d!=="object"||!Array.isArray(d.tasks)){ alert("Ce fichier n'est pas une sauvegarde valide."); return; }
+      if(state.tasks.length && !confirm("Remplacer les données actuelles par cette sauvegarde ?")) return;
+      state={...state, tasks:d.tasks||[], blocks:d.blocks||[], slots:d.slots||[],
+        cats:d.cats||state.cats, colors:d.colors||state.colors, theme:d.theme||state.theme };
+      if(!state.cats||!Object.keys(state.cats).length) state.cats={...CATEGORIES};
+      if(!state.colors) state.colors={cat:{},urg:{}};
+      if(!state.colors.cat) state.colors.cat={};
+      if(!state.colors.urg) state.colors.urg={};
+      applyTheme(); commit();
+    };
+    rd.readAsText(f);
+  });
+  inp.click();
+}
+function applyTheme(){
+  document.documentElement.classList.toggle("dark", state.theme==="dark");
+  const tc=document.querySelector('meta[name="theme-color"]');   // teinte de la barre de statut iPhone
+  if(tc) tc.setAttribute("content", state.theme==="dark"?"#14181A":"#EEF1EF");
+}
+function commit(){ persist(); render(); flashSaved(); }
+function flashSaved(){ const el=document.querySelector(".pl-saved"); if(!el)return; el.classList.add("show");
+  clearTimeout(savedTimer); savedTimer=setTimeout(()=>{ const e=document.querySelector(".pl-saved"); if(e)e.classList.remove("show"); },1200); }
+
+function sampleData(){
+  const y=2026;
+  state.tasks=[
+    {id:uid(),nom:"Montage vidéo réseaux",difficulte:"Moyen",horizon:"Court terme",urgence:"Urgent",statut:"En cours",categorie:"Responsabilité",echeance:y+"-07-04"},
+    {id:uid(),nom:"Rapport — plan détaillé",difficulte:"Difficile",horizon:"Long terme",urgence:"Modéré",statut:"À faire",categorie:"Études",echeance:y+"-08-20"},
+    {id:uid(),nom:"Réserver billets week-end",difficulte:"Facile",horizon:"Court terme",urgence:"Critique",statut:"À faire",categorie:"Perso",echeance:y+"-07-10"},
+    {id:uid(),nom:"Module formation montage",difficulte:"Moyen",horizon:"Long terme",urgence:"Mineur",statut:"À faire",categorie:"Loisirs",echeance:""}
+  ];
+  state.blocks=[
+    {id:uid(),nom:"Stage",type:"Responsabilité",debut:y+"-07-01",fin:y+"-08-31",note:""},
+    {id:uid(),nom:"Vacances famille",type:"Perso",debut:y+"-07-19",fin:y+"-07-27",note:""},
+    {id:uid(),nom:"Sortie groupe",type:"Loisirs",debut:y+"-07-12",fin:y+"-07-12",note:""}
+  ];
+  state.slots=[
+    {id:uid(),nom:"Montage",date:y+"-07-06",start:"09:00",end:"12:00",blockId:"",taskId:""},
+    {id:uid(),nom:"Sport",date:y+"-07-08",start:"18:00",end:"19:30",blockId:"",taskId:""}
+  ];
+}
+
+/* ---------- Briques ---------- */
+function chip(text,c,outline){ return `<span class="pl-chip${outline?" outline":""}" style="--c:${c}">${esc(text)}</span>`; }
+function optEnum(obj,sel){ return Object.keys(obj).map(k=>`<option${k===sel?" selected":""}>${esc(k)}</option>`).join(""); }
+
+function header(){
+  const tabs=[["taches","Tâches"],["mois","Mois"],["semaine","Semaine"]].map(([k,l])=>
+    `<button class="pl-tab${view===k?" is-active":""}" data-action="view" data-view="${k}">${l}</button>`).join("");
+  return `<header class="pl-top">
+    <div class="pl-brand"><span class="pl-mark"></span>
+      <div><h1>Plannificateur&nbsp;XP</h1><p>Tâches priorisées · vue d'ensemble · semaine</p></div></div>
+    <nav class="pl-nav">${tabs}</nav>
+    <span class="pl-saved">Enregistré</span>
+    <button class="pl-icobtn" data-action="export" title="Exporter une sauvegarde (.json)">💾</button>
+    <button class="pl-icobtn" data-action="import" title="Importer une sauvegarde (.json)">📂</button>
+    <button class="pl-icobtn" data-action="colors" title="Couleurs">🎨</button>
+    <button class="pl-icobtn" data-action="theme" title="Clair / sombre">${state.theme==="dark"?"☀":"☾"}</button>
+  </header>`;
+}
+function storageWarn(){
+  if(storageWorks()) return "";
+  return `<div class="pl-warn"><span>⚠️</span><span>Ce navigateur n'enregistre pas tes données de façon persistante (cas de Safari en fichier local).
+    Pense à <b>💾 Exporter</b> une sauvegarde régulièrement, et à l'<b>📂 Importer</b> à la prochaine ouverture.
+    Astuce : Chrome ou Firefox conservent tout automatiquement.</span></div>`;
+}
+function seedBar(){
+  if(!(state.tasks.length===0&&state.blocks.length===0&&state.slots.length===0)) return "";
+  return `<div class="pl-seed"><span>Tout est vide pour l'instant.</span>
+    <button class="pl-btn ghost" data-action="load-samples">Charger un exemple</button>
+    <span class="pl-seed-hint">(tu pourras tout supprimer)</span></div>`;
+}
+
+/* ---------- Tâches ---------- */
+function filterPanel(){
+  return `<div class="pl-filterpanel">${FILTER_FACETS.map(f=>`
+    <div class="pl-fgroup"><h5>${f.label}</h5><div class="pl-ftags">${
+      (typeof f.values==="function"?f.values():f.values).map(v=>{
+        const on=filters[f.key].includes(v);
+        return `<label class="pl-ftag${on?" on":""}" style="--c:${f.color(v)}">
+          <input type="checkbox" data-facet="${f.key}" data-value="${esc(v)}" ${on?"checked":""}/>
+          <i class="dot"></i>${esc(v)}</label>`;
+      }).join("")
+    }</div></div>`).join("")}</div>`;
+}
+function tasksView(){
+  const ed=editTaskId?state.tasks.find(t=>t.id===editTaskId):null;
+  const d=ed||{nom:"",urgence:"Modéré",difficulte:"Moyen",horizon:"Court terme",categorie:defaultCat(),echeance:""};
+  const form=`<div class="pl-form">
+    <input id="t-nom" class="pl-input grow" placeholder="Nouvelle tâche…" value="${esc(d.nom)}" />
+    <select id="t-urg" class="pl-input sel">${optEnum(URGENCE,d.urgence)}</select>
+    <select id="t-diff" class="pl-input sel">${optEnum(DIFFICULTE,d.difficulte)}</select>
+    <select id="t-hor" class="pl-input sel">${optEnum(HORIZON,d.horizon)}</select>
+    <select id="t-cat" class="pl-input sel">${catKeys().map(k=>`<option${k===d.categorie?" selected":""}>${esc(k)}</option>`).join("")}</select>
+    <input id="t-ech" class="pl-input date" type="date" value="${esc(d.echeance)}" />
+    <button class="pl-btn" data-action="save-task">${ed?"Mettre à jour":"Ajouter"}</button>
+    ${ed?`<button class="pl-btn ghost" data-action="cancel-task">Annuler</button>`:""}
+  </div>`;
+  const activeCount=FILTER_FACETS.reduce((n,f)=>n+filters[f.key].length,0);
+  const toolbar=`<div class="pl-toolbar">
+    <div class="pl-seg">
+      <button class="${taskMode==="priorite"?"on":""}" data-action="task-mode" data-mode="priorite">Par priorité</button>
+      <button class="${taskMode==="kanban"?"on":""}" data-action="task-mode" data-mode="kanban">Kanban statut</button>
+    </div>
+    <div class="pl-filters">
+      <button class="pl-mini${filtersOpen||activeCount?" on":""}" data-action="toggle-filters">⚑ Filtres${activeCount?" · "+activeCount:""}</button>
+      ${activeCount?`<button class="pl-mini" data-action="clear-filters">Réinitialiser</button>`:""}
+      <label class="pl-check"><input id="f-done" type="checkbox" ${hideDone?"checked":""}/> Masquer terminées</label>
+    </div>
+  </div>${filtersOpen?filterPanel():""}`;
+  let list=state.tasks.slice();
+  FILTER_FACETS.forEach(f=>{ const sel=filters[f.key]; if(sel.length) list=list.filter(t=>sel.includes(t[f.key])); });
+  if(hideDone) list=list.filter(t=>t.statut!=="Terminé");
+  list.sort((a,b)=>{
+    const da=a.statut==="Terminé"?1:0, db=b.statut==="Terminé"?1:0;
+    if(da!==db) return da-db;           // les tâches non faites d'abord, les accomplies tout en bas
+    return scoreOf(b)-scoreOf(a);        // puis, dans chaque groupe, tri par score décroissant
+  });
+  let body;
+  if(state.tasks.length===0) body=`<div class="pl-empty">Ajoute ta première tâche ci-dessus. Le score de priorité (1 à 10) se calcule tout seul.</div>`;
+  else if(taskMode==="priorite") body=`<div class="pl-list">${list.map(t=>taskCard(t)).join("")}</div>`;
+  else body=`<div class="pl-kanban">${STATUTS.map(st=>{
+    const col=list.filter(t=>t.statut===st);
+    return `<div class="pl-col"><div class="pl-col-head" style="--c:${STATUT_COLOR[st]}"><span class="dot"></span> ${st} <span class="count">${col.length}</span></div>
+      <div class="pl-col-body">${col.map(t=>taskCard(t,true)).join("")||'<p class="pl-col-empty">—</p>'}</div></div>`;
+  }).join("")}</div>`;
+  return `<section>${form}${toolbar}${body}</section>`;
+}
+/* ---------- Logo Geometry Dash (urgence = couleur, difficulté = pics + tête) ---------- */
+function gdSpikes(n,color){
+  const sets={1:[20],3:[12,20,28],5:[6,13,20,27,34]};
+  return (sets[n]||sets[1]).map(x=>`<polygon points="${x-3.5},36 ${x+3.5},36 ${x},27" fill="${color}" stroke="var(--ink)" stroke-width="1" stroke-linejoin="round"/>`).join("");
+}
+function gdFace(diff){
+  const eyes=`<rect x="14" y="9" width="3" height="4" rx="1" fill="#10101a"/><rect x="23" y="9" width="3" height="4" rx="1" fill="#10101a"/>`;
+  if(diff==="Facile") return eyes+`<path d="M16 16 Q20 20 24 16" fill="none" stroke="#10101a" stroke-width="1.6" stroke-linecap="round"/>`;
+  if(diff==="Moyen") return eyes+`<line x1="16" y1="18" x2="24" y2="18" stroke="#10101a" stroke-width="1.6" stroke-linecap="round"/>`;
+  return eyes+`<path d="M16 19 Q20 15 24 19" fill="none" stroke="#10101a" stroke-width="1.6" stroke-linecap="round"/><line x1="14" y1="7" x2="17" y2="9" stroke="#10101a" stroke-width="1.6" stroke-linecap="round"/><line x1="26" y1="7" x2="23" y2="9" stroke="#10101a" stroke-width="1.6" stroke-linecap="round"/>`;
+}
+function gdBadge(urg,diff){
+  const color=urgColor(urg);
+  return `<svg class="gd-badge" viewBox="0 0 40 40" aria-hidden="true"><title>${esc(urg)} · ${esc(diff)}</title>
+    <line x1="4" y1="36" x2="36" y2="36" stroke="${color}" stroke-opacity=".5" stroke-width="1"/>
+    ${gdSpikes(DIFF_SPIKES[diff],color)}
+    <rect x="9" y="3" width="22" height="21" rx="5" fill="${color}" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round"/>
+    ${gdFace(diff)}</svg>`;
+}
+function taskCard(t,compact){
+  const s=scoreOf(t), fill=((s-1)/9)*100, sc=scoreColor(s);
+  return `<article class="pl-card${t.statut==="Terminé"?" is-completed":""}${compact?" compact":""}">
+    <div class="pl-score" style="--sc:${sc}">${gdBadge(t.urgence,t.difficulte)}<b>${s}</b><span class="gauge"><i style="width:${fill}%"></i></span></div>
+    <div class="pl-card-body">
+      <div class="pl-card-top"><h3>${esc(t.nom)}</h3>
+        <span class="pl-cat" style="--c:${catColor(t.categorie)}">${esc(t.categorie)}</span></div>
+      <div class="pl-chips">
+        ${chip(t.urgence,urgColor(t.urgence))}
+        ${chip(t.difficulte,DIFFICULTE[t.difficulte].c)}
+        ${chip(t.horizon,HORIZON[t.horizon].c,true)}
+        ${t.echeance?chip("⏷ "+shortDate(t.echeance),"#5B6B66",true):""}
+      </div>
+    </div>
+    <div class="pl-card-actions">
+      <button class="pl-statut" style="--c:${STATUT_COLOR[t.statut]}" data-action="cycle-statut" data-id="${t.id}">${t.statut==="Terminé"?`<svg class="chk" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.6l3.4 3.4L13 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`:""}${t.statut}</button>
+      <div class="pl-icons">
+        <button data-action="edit-task" data-id="${t.id}" title="Modifier">✎</button>
+        <button data-action="remove-task" data-id="${t.id}" title="Supprimer">✕</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+/* ---------- Mois ---------- */
+function monthView(){
+  const year=monthCursor.getFullYear(), month=monthCursor.getMonth();
+  const startGrid=mondayOf(new Date(year,month,1));
+  const dayMs=86400000, today=iso(new Date());
+  const weeks=Array.from({length:6},(_,w)=>Array.from({length:7},(_,i)=>addDays(startGrid,w*7+i)));
+  const legend=catKeys().map(k=>`<span><i style="background:${catColor(k)}"></i>${esc(k)}</span>`).join("");
+
+  const weeksHTML=weeks.map(wk=>{
+    const weekStart=wk[0], weekEnd=wk[6];
+    // Segments d'événements qui touchent cette semaine, découpés aux bords de la semaine
+    const evs=state.blocks
+      .filter(b=>parseISO(b.debut)<=weekEnd && parseISO(b.fin)>=weekStart)
+      .map(b=>{
+        const bs=parseISO(b.debut), be=parseISO(b.fin);
+        return { block:b,
+          s:Math.max(0,Math.round((bs-weekStart)/dayMs)),   // colonne de départ (0..6)
+          e:Math.min(6,Math.round((be-weekStart)/dayMs)),   // colonne de fin (0..6)
+          left:bs<weekStart, right:be>weekEnd };            // se prolonge hors semaine ?
+      });
+    // Attribution des couloirs : les segments qui se chevauchent en colonnes vont sur des lignes différentes
+    evs.sort((a,b)=> a.s-b.s || (b.e-b.s)-(a.e-a.s));
+    const lanes=[];
+    evs.forEach(it=>{ let l=0; for(;;){ const lane=lanes[l]||(lanes[l]=[]); if(lane.every(r=>it.s>r.e||it.e<r.s)){ lane.push(it); it.lane=l; break; } l++; } });
+    const minH=Math.max(92, 34 + lanes.length*21);
+
+    const cells=wk.map(day=>{
+      const inMonth=day.getMonth()===month, isToday=iso(day)===today;
+      return `<div class="pl-cal-cell${inMonth?"":" out"}${isToday?" today":""}" style="min-height:${minH}px" data-action="new-block" data-date="${iso(day)}">
+        <span class="pl-cal-n">${day.getDate()}</span><span class="pl-cal-add">+</span></div>`;
+    }).join("");
+
+    const bars=evs.map(ev=>{
+      const b=ev.block, len=ev.e-ev.s+1;
+      const radius=`border-radius:${ev.left?0:5}px ${ev.right?0:5}px ${ev.right?0:5}px ${ev.left?0:5}px`;
+      const span=b.debut!==b.fin?" — "+shortDate(b.debut)+" → "+shortDate(b.fin):"";
+      return `<button class="pl-cal-bar" style="grid-column:${ev.s+1}/span ${len};grid-row:${ev.lane+1};--c:${catColor(b.type)};${radius}" data-action="edit-block" data-id="${b.id}" title="${esc(b.nom)}${span}">${ev.left?"‹ ":""}${esc(b.nom)}</button>`;
+    }).join("");
+
+    return `<div class="pl-cal-week">${cells}<div class="pl-cal-bars">${bars}</div></div>`;
+  }).join("");
+
+  const grid=`<div class="pl-cal"><div class="pl-cal-head">${JOURS.map(j=>`<div class="pl-cal-h">${j}</div>`).join("")}</div>${weeksHTML}</div>`;
+  return `<section>
+    <div class="pl-monthbar">
+      <button class="pl-nav-btn" data-action="month-prev">‹</button>
+      <h2>${MOIS[month]} ${year}</h2>
+      <button class="pl-nav-btn" data-action="month-next">›</button>
+      <button class="pl-btn sm" data-action="new-block" data-date="${iso(new Date(year,month,1))}">+ Nouvel événement</button>
+      <div class="pl-legend">${legend}</div>
+    </div>${grid}</section>`;
+}
+
+/* ---------- Semaine (grille horaire) ---------- */
+function weekView(){
+  const days=Array.from({length:7},(_,i)=>addDays(weekCursor,i));
+  const label=weekCursor.getDate()+" "+MOIS[weekCursor.getMonth()].slice(0,4)+". – "+addDays(weekCursor,6).getDate()+" "+MOIS[addDays(weekCursor,6).getMonth()].slice(0,4)+".";
+  const rows=DAY_END-DAY_START, colH=rows*HOUR_PX;
+
+  const headers=days.map(d=>`<div class="pl-wk-dh${iso(d)===iso(new Date())?" today":""}">${fmtDayLabel(d)}</div>`).join("");
+  const hours=Array.from({length:rows},(_,i)=>`<div class="pl-wk-hr">${pad(DAY_START+i)}:00</div>`).join("");
+
+  const cols=days.map(d=>{
+    const today=iso(d)===iso(new Date());
+    const evs=state.slots.filter(s=>s.date===iso(d)).map(s=>{
+      const b=state.blocks.find(x=>x.id===s.blockId), tk=state.tasks.find(x=>x.id===s.taskId);
+      const accent=b?catColor(b.type):tk?catColor(tk.categorie):"var(--petrol)";
+      let top=(toMin(s.start)-DAY_START*60)/60*HOUR_PX;
+      let h=(toMin(s.end)-toMin(s.start))/60*HOUR_PX;
+      top=Math.max(0,top); h=Math.max(20,h-2);
+      const tall=h>=52;
+      const link=b?esc(b.nom):tk?("◆ "+esc(tk.nom)):"";
+      return `<div class="pl-wk-ev" style="--c:${accent};top:${top}px;height:${h}px" data-action="edit-slot" data-id="${s.id}">
+        <div class="t">${esc(s.start)}–${esc(s.end)}</div><div class="n">${esc(s.nom)}</div>
+        ${tall&&link?`<div class="lk">${link}</div>`:""}</div>`;
+    }).join("");
+    return `<div class="pl-wk-col${today?" today":""}" style="height:${colH}px" data-action="new-slot-at" data-date="${iso(d)}">${evs}</div>`;
+  }).join("");
+
+  return `<section>
+    <div class="pl-monthbar">
+      <button class="pl-nav-btn" data-action="week-prev">‹</button>
+      <h2>Semaine du ${label}</h2>
+      <button class="pl-nav-btn" data-action="week-next">›</button>
+      <button class="pl-btn ghost sm" data-action="week-today">Cette semaine</button>
+      <button class="pl-btn sm" data-action="new-slot" data-date="${iso(weekCursor)}">+ Nouveau créneau</button>
+    </div>
+    <div class="pl-wk-wrap"><div class="pl-wk" style="--hpx:${HOUR_PX}px">
+      <div class="pl-wk-corner"></div>${headers}
+      <div class="pl-wk-hours">${hours}</div>${cols}
+    </div></div>
+    <p class="pl-wk-hint">Astuce : clique directement sur une heure dans une colonne pour créer un créneau à ce moment-là.</p>
+  </section>`;
+}
+
+/* ---------- Modale ---------- */
+function modalHTML(){
+  if(!modal) return "";
+  let title="", body="";
+  if(modal.kind==="event"){
+    const b=modal.data;
+    title=modal.isNew?"Nouvel événement":"Modifier l'événement";
+    body=`
+      <label class="pl-field"><span>Nom</span><input id="m-nom" class="pl-input" placeholder="Vacances, stage, sortie…" value="${esc(b.nom)}"/></label>
+      <label class="pl-field"><span>Catégorie</span><select id="m-type" class="pl-input">${catKeys().map(k=>`<option${k===b.type?" selected":""}>${esc(k)}</option>`).join("")}</select></label>
+      <div class="pl-field-row">
+        <label class="pl-field"><span>Début</span><input id="m-debut" class="pl-input" type="date" value="${esc(b.debut)}"/></label>
+        <label class="pl-field"><span>Fin</span><input id="m-fin" class="pl-input" type="date" value="${esc(b.fin)}"/></label>
+      </div>
+      <label class="pl-field"><span>Note <em>(facultatif)</em></span><textarea id="m-note" class="pl-input" rows="2" placeholder="Détails libres…">${esc(b.note||"")}</textarea></label>
+      <div class="pl-modal-f">${modal.isNew?"":`<button class="pl-btn danger" data-action="delete-event" data-id="${b.id}">Supprimer</button>`}
+        <div class="pl-spacer"></div><button class="pl-btn ghost" data-action="modal-close">Annuler</button>
+        <button class="pl-btn" data-action="save-event">Enregistrer</button></div>`;
+  } else if(modal.kind==="slot"){
+    const s=modal.data;
+    title=modal.isNew?"Nouveau créneau":"Modifier le créneau";
+    const dayOpts=modal.days.map(d=>`<option value="${iso(d)}"${iso(d)===s.date?" selected":""}>${fmtDayLabel(d)}</option>`).join("");
+    body=`
+      <label class="pl-field"><span>Intitulé</span><input id="m-nom" class="pl-input" placeholder="Montage, révisions, sport…" value="${esc(s.nom)}"/></label>
+      <label class="pl-field"><span>Jour</span><select id="m-date" class="pl-input">${dayOpts}</select></label>
+      <div class="pl-field-row">
+        <label class="pl-field"><span>Début</span><input id="m-start" class="pl-input" type="time" value="${esc(s.start)}"/></label>
+        <label class="pl-field"><span>Fin</span><input id="m-end" class="pl-input" type="time" value="${esc(s.end)}"/></label>
+      </div>
+      <label class="pl-field"><span>Bloc lié <em>(facultatif)</em></span><select id="m-block" class="pl-input"><option value="">— Aucun —</option>${state.blocks.map(b=>`<option value="${b.id}"${b.id===s.blockId?" selected":""}>${esc(b.nom)}</option>`).join("")}</select></label>
+      <label class="pl-field"><span>Tâche liée <em>(facultatif)</em></span><select id="m-task" class="pl-input"><option value="">— Aucune —</option>${state.tasks.map(t=>`<option value="${t.id}"${t.id===s.taskId?" selected":""}>${esc(t.nom)}</option>`).join("")}</select></label>
+      <div class="pl-modal-f">${modal.isNew?"":`<button class="pl-btn danger" data-action="delete-slot" data-id="${s.id}">Supprimer</button>`}
+        <div class="pl-spacer"></div><button class="pl-btn ghost" data-action="modal-close">Annuler</button>
+        <button class="pl-btn" data-action="save-slot">Enregistrer</button></div>`;
+  } else if(modal.kind==="colors"){
+    title="Catégories & couleurs";
+    const catRows=catKeys().map(k=>`<div class="pl-crow">
+      <input class="pl-input cat-name" data-cat-old="${esc(k)}" value="${esc(k)}" aria-label="Nom de la catégorie" />
+      <input type="color" data-ck="cat" data-cname="${esc(k)}" value="${catColor(k)}" title="Couleur">
+      <button class="pl-catdel" data-action="del-cat" data-name="${esc(k)}" title="Supprimer la catégorie">✕</button>
+    </div>`).join("");
+    const addRow=`<div class="pl-crow pl-addcat">
+      <input class="pl-input cat-name" id="new-cat-name" placeholder="Nouvelle catégorie…" />
+      <input type="color" id="new-cat-color" value="#4C9A8E" title="Couleur">
+      <button class="pl-btn sm" data-action="add-cat">Ajouter</button>
+    </div>`;
+    const urgRows=Object.keys(URGENCE).map(k=>`<div class="pl-crow"><span class="lbl"><i class="sw" style="--c:${urgColor(k)}"></i>${esc(k)}</span>
+      <input type="color" data-ck="urg" data-cname="${esc(k)}" value="${urgColor(k)}"></div>`).join("");
+    body=`<div class="pl-cgrp"><h4>Catégories</h4>${catRows}${addRow}</div>
+      <div class="pl-cgrp"><h4>Urgence</h4>${urgRows}</div>
+      <div class="pl-modal-f"><button class="pl-btn danger" data-action="reset-colors">Réinitialiser</button>
+        <div class="pl-spacer"></div><button class="pl-btn" data-action="modal-close">Fermer</button></div>`;
+  }
+  return `<div class="pl-backdrop" id="pl-backdrop"><div class="pl-modal">
+    <div class="pl-modal-h"><h3>${title}</h3><button class="pl-modal-x" data-action="modal-close">✕</button></div>
+    <div class="pl-modal-b">${body}</div></div></div>`;
+}
+
+/* ---------- Rendu ---------- */
+function render(){
+  const main=view==="taches"?tasksView():view==="mois"?monthView():weekView();
+  document.getElementById("app").innerHTML=header()+storageWarn()+seedBar()+`<main>${main}</main>`+modalHTML();
+  if(modal){
+    const bd=document.getElementById("pl-backdrop");
+    if(bd) bd.addEventListener("click",e=>{ if(e.target===bd) closeModal(); });
+    if(modal.kind==="event"||modal.kind==="slot"){
+      const first=document.querySelector(".pl-modal input,.pl-modal textarea,.pl-modal select");
+      if(first) first.focus();
+    }
+  }
+}
+function closeModal(){ modal=null; render(); }
+function weekDays(){ return Array.from({length:7},(_,i)=>addDays(weekCursor,i)); }
+
+function readTaskForm(){ return {
+  nom:document.getElementById("t-nom").value.trim(),
+  urgence:document.getElementById("t-urg").value, difficulte:document.getElementById("t-diff").value,
+  horizon:document.getElementById("t-hor").value, categorie:document.getElementById("t-cat").value,
+  echeance:document.getElementById("t-ech").value, statut:"À faire" }; }
+
+/* ---------- Évènements ---------- */
+document.addEventListener("click", e=>{
+  if(modal && e.target.id==="pl-backdrop"){ closeModal(); return; }
+  const el=e.target.closest("[data-action]"); if(!el) return;
+  const a=el.dataset.action, id=el.dataset.id, date=el.dataset.date;
+  switch(a){
+    case "view": view=el.dataset.view; editTaskId=null; render(); break;
+    case "theme": state.theme=state.theme==="dark"?"light":"dark"; applyTheme(); commit(); break;
+    case "colors": modal={kind:"colors"}; render(); break;
+    case "reset-colors": state.cats={...CATEGORIES}; state.colors={cat:{},urg:{}}; commit(); break;
+    case "add-cat": {
+      const nm=document.getElementById("new-cat-name").value.trim(), cl=document.getElementById("new-cat-color").value;
+      if(!nm) return;
+      if(state.cats[nm]!=null){ alert("Cette catégorie existe déjà."); return; }
+      state.cats[nm]=cl; commit(); break;
+    }
+    case "del-cat": {
+      const nm=el.dataset.name;
+      if(catKeys().length<=1){ alert("Il faut garder au moins une catégorie."); return; }
+      const fallback=catKeys().find(k=>k!==nm);
+      const used=state.tasks.filter(t=>t.categorie===nm).length+state.blocks.filter(b=>b.type===nm).length;
+      if(used && !confirm(`« ${nm} » est utilisée par ${used} élément(s). Les réaffecter à « ${fallback} » et supprimer la catégorie ?`)) return;
+      state.tasks.forEach(t=>{ if(t.categorie===nm) t.categorie=fallback; });
+      state.blocks.forEach(b=>{ if(b.type===nm) b.type=fallback; });
+      delete state.cats[nm];
+      if(filters.categorie) filters.categorie=filters.categorie.filter(x=>x!==nm);
+      commit(); break;
+    }
+    case "load-samples": sampleData(); commit(); break;
+    case "export": exportBackup(); break;
+    case "import": importBackup(); break;
+
+    case "save-task": { const v=readTaskForm(); if(!v.nom) return;
+      if(editTaskId){ state.tasks=state.tasks.map(t=>t.id===editTaskId?{...t,...v,statut:t.statut}:t); editTaskId=null; }
+      else state.tasks.push({...v,id:uid()}); commit(); break; }
+    case "cancel-task": editTaskId=null; render(); break;
+    case "edit-task": editTaskId=id; render(); window.scrollTo({top:0,behavior:"smooth"}); break;
+    case "remove-task": state.tasks=state.tasks.filter(t=>t.id!==id); if(editTaskId===id)editTaskId=null; commit(); break;
+    case "cycle-statut": state.tasks=state.tasks.map(t=>{ if(t.id!==id)return t; const i=STATUTS.indexOf(t.statut); return {...t,statut:STATUTS[(i+1)%STATUTS.length]}; }); commit(); break;
+    case "task-mode": taskMode=el.dataset.mode; render(); break;
+    case "toggle-filters": filtersOpen=!filtersOpen; render(); break;
+    case "clear-filters": filters={categorie:[],urgence:[],difficulte:[],statut:[]}; render(); break;
+
+    case "month-prev": monthCursor=new Date(monthCursor.getFullYear(),monthCursor.getMonth()-1,1); render(); break;
+    case "month-next": monthCursor=new Date(monthCursor.getFullYear(),monthCursor.getMonth()+1,1); render(); break;
+    case "new-block": modal={kind:"event",isNew:true,data:{id:uid(),nom:"",type:defaultCat(),debut:date,fin:date,note:""}}; render(); break;
+    case "edit-block": { const b=state.blocks.find(x=>x.id===id); if(b){ modal={kind:"event",isNew:false,data:{...b}}; render(); } break; }
+    case "save-event": { const b={ id:modal.data.id, nom:document.getElementById("m-nom").value.trim(),
+        type:document.getElementById("m-type").value, debut:document.getElementById("m-debut").value,
+        fin:document.getElementById("m-fin").value, note:document.getElementById("m-note").value };
+      if(!b.nom||!b.debut) return; if(!b.fin||b.fin<b.debut) b.fin=b.debut;
+      state.blocks=state.blocks.some(x=>x.id===b.id)?state.blocks.map(x=>x.id===b.id?b:x):[...state.blocks,b]; modal=null; commit(); break; }
+    case "delete-event": state.blocks=state.blocks.filter(x=>x.id!==id); modal=null; commit(); break;
+
+    case "week-prev": weekCursor=addDays(weekCursor,-7); render(); break;
+    case "week-next": weekCursor=addDays(weekCursor,7); render(); break;
+    case "week-today": weekCursor=mondayOf(new Date()); render(); break;
+    case "new-slot": modal={kind:"slot",isNew:true,days:weekDays(),data:{id:uid(),nom:"",date:date,start:"09:00",end:"10:00",blockId:"",taskId:""}}; render(); break;
+    case "new-slot-at": {
+      const rect=el.getBoundingClientRect();
+      let mins=DAY_START*60+((e.clientY-rect.top)/HOUR_PX)*60;
+      mins=Math.max(DAY_START*60, Math.min(DAY_END*60-30, Math.round(mins/30)*30));
+      const start=fmtMin(mins), end=fmtMin(Math.min(DAY_END*60, mins+60));
+      modal={kind:"slot",isNew:true,days:weekDays(),data:{id:uid(),nom:"",date:date,start,end,blockId:"",taskId:""}}; render(); break;
+    }
+    case "edit-slot": { const s=state.slots.find(x=>x.id===id); if(s){ modal={kind:"slot",isNew:false,days:weekDays(),data:{...s}}; render(); } break; }
+    case "save-slot": { const s={ id:modal.data.id, nom:document.getElementById("m-nom").value.trim(),
+        date:document.getElementById("m-date").value, start:document.getElementById("m-start").value,
+        end:document.getElementById("m-end").value, blockId:document.getElementById("m-block").value, taskId:document.getElementById("m-task").value };
+      if(!s.nom||!s.date) return;
+      state.slots=state.slots.some(x=>x.id===s.id)?state.slots.map(x=>x.id===s.id?s:x):[...state.slots,s]; modal=null; commit(); break; }
+    case "delete-slot": state.slots=state.slots.filter(x=>x.id!==id); modal=null; commit(); break;
+    case "modal-close": closeModal(); break;
+  }
+});
+document.addEventListener("change", e=>{
+  if(e.target.dataset && e.target.dataset.facet){
+    const f=e.target.dataset.facet, v=e.target.dataset.value, arr=filters[f];
+    if(e.target.checked){ if(!arr.includes(v)) arr.push(v); }
+    else filters[f]=arr.filter(x=>x!==v);
+    render(); return;
+  }
+  if(e.target.id==="f-done"){ hideDone=e.target.checked; render(); return; }
+  if(e.target.dataset && e.target.dataset.catOld!=null){ renameCat(e.target.dataset.catOld, e.target.value); commit(); return; }
+  if(e.target.dataset && e.target.dataset.ck){
+    const kind=e.target.dataset.ck, name=e.target.dataset.cname;
+    if(kind==="cat") state.cats[name]=e.target.value;
+    else state.colors.urg[name]=e.target.value;
+    commit(); // garde la modale ouverte, met tout à jour
+  }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && modal) closeModal(); });
+
+/* ---------- Démarrage ---------- */
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}  // évite l'éviction auto des données
+applyTheme();
+render();
+</script>
+</body>
+</html>
