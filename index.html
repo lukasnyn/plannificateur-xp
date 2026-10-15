@@ -41,9 +41,7 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 
 .pl-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
 .pl-brand{display:flex;align-items:center;gap:12px;margin-right:auto}
-.pl-mark{width:30px;height:30px;border-radius:9px;
-  background:conic-gradient(from 200deg,#0E6E6E,#2D7DD2,#7C5CFF,#E85D9E,#F2A03D,#0E6E6E);
-  box-shadow:inset 0 0 0 4px var(--surface)}
+.pl-mark{width:32px;height:32px;display:block;flex:none;border-radius:8px;box-shadow:0 0 0 1px color-mix(in srgb,#6CC1F7 18%,transparent)}
 .pl-brand h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;margin:0;letter-spacing:-.02em}
 .pl-brand p{margin:1px 0 0;font-size:11.5px;color:var(--muted)}
 .pl-nav{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:12px;border:1px solid var(--line)}
@@ -395,11 +393,13 @@ function sampleData(){
 function chip(text,c,outline){ return `<span class="pl-chip${outline?" outline":""}" style="--c:${c}">${esc(text)}</span>`; }
 function optEnum(obj,sel){ return Object.keys(obj).map(k=>`<option${k===sel?" selected":""}>${esc(k)}</option>`).join(""); }
 
+// Logo : trois chevrons au dégradé bleu (même dessin que l'icône d'app, généré par calcul)
+const LOGO_SVG=`<svg class="pl-mark" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="plx0" gradientUnits="userSpaceOnUse" x1="43.6" y1="51.4" x2="26.7" y2="41.6"><stop offset="0" stop-color="#1B4C9C"/><stop offset="0.55" stop-color="#2F7FD6"/><stop offset="1" stop-color="#6CC1F7"/></linearGradient><linearGradient id="plx1" gradientUnits="userSpaceOnUse" x1="50.0" y1="62.5" x2="50.0" y2="82.0"><stop offset="0" stop-color="#1B4C9C"/><stop offset="0.55" stop-color="#2F7FD6"/><stop offset="1" stop-color="#6CC1F7"/></linearGradient><linearGradient id="plx2" gradientUnits="userSpaceOnUse" x1="56.4" y1="51.4" x2="73.3" y2="41.6"><stop offset="0" stop-color="#1B4C9C"/><stop offset="0.55" stop-color="#2F7FD6"/><stop offset="1" stop-color="#6CC1F7"/></linearGradient><radialGradient id="plxbg" cx="50.0" cy="44.0" r="72.0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#14325E"/><stop offset="1" stop-color="#07142A"/></radialGradient></defs><rect width="100" height="100" rx="24" fill="url(#plxbg)"/><path d="M43.6 51.4 L13.5 66.1 L12.5 64.5 L37.1 47.7 L39.4 18.0 L41.3 18.0 Z" fill="url(#plx0)" stroke="url(#plx0)" stroke-width="0.6" stroke-linejoin="round"/><path d="M50.0 62.5 L77.8 81.2 L76.9 82.8 L50.0 70.0 L23.1 82.8 L22.2 81.2 Z" fill="url(#plx1)" stroke="url(#plx1)" stroke-width="0.6" stroke-linejoin="round"/><path d="M56.4 51.4 L58.7 18.0 L60.6 18.0 L62.9 47.7 L87.5 64.5 L86.5 66.1 Z" fill="url(#plx2)" stroke="url(#plx2)" stroke-width="0.6" stroke-linejoin="round"/></svg>`;
 function header(){
   const tabs=[["taches","Tâches"],["mois","Mois"],["semaine","Semaine"]].map(([k,l])=>
     `<button class="pl-tab${view===k?" is-active":""}" data-action="view" data-view="${k}">${l}</button>`).join("");
   return `<header class="pl-top">
-    <div class="pl-brand"><span class="pl-mark"></span>
+    <div class="pl-brand">${LOGO_SVG}
       <div><h1>Plannificateur&nbsp;XP</h1><p>Tâches priorisées · vue d'ensemble · semaine</p></div></div>
     <nav class="pl-nav">${tabs}</nav>
     <span class="pl-saved">Enregistré</span>
